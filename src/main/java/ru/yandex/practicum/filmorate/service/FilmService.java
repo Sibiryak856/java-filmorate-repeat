@@ -8,11 +8,11 @@ import java.util.List;
 public interface FilmService {
 
     Film create(Film film);
-    void update(Film film);
+    Film update(Film film);
     Film getById(long id);
     List<Film> getAll();
 
-    void updateLikes(long id, long userId, RequestMethod requestMethod);
+    void updateLikes(long id, int userId, RequestMethod requestMethod);
 
     List<Film> getPopular(int count);
 }

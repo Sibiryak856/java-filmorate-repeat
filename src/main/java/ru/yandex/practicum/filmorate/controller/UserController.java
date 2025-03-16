@@ -16,7 +16,8 @@ import java.util.List;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-    private UserService service;
+
+    private final UserService service;
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
@@ -27,10 +28,11 @@ public class UserController {
     }
 
     @PutMapping
-    public void update(@Valid @RequestBody User user) {
+    public User update(@Valid @RequestBody User user) {
         log.info("Request received: PUT /users: {}", user);
-        service.update(user);
+        User updated = service.update(user);
         log.info("Request PUT processed");
+        return updated;
     }
 
     @GetMapping("/{id}")
@@ -65,7 +67,7 @@ public class UserController {
         log.info("Request DELETE processed");
     }
 
-    @GetMapping("GET /users/{id}/friends")
+    @GetMapping("/{id}/friends")
     public List<User> getUserFriends(@PathVariable Long id) {
         log.info("Request received: GET /users/{}/friends", id);
         List<User> users = service.getUserFriends(id);
@@ -73,7 +75,7 @@ public class UserController {
         return users;
     }
 
-    @GetMapping("/users/{id}/friends/common/{otherId}")
+    @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable Long id,
                                        @PathVariable Long otherId) {
         log.info("Request received: GET /users/{}/friends/common/{}", id, otherId);

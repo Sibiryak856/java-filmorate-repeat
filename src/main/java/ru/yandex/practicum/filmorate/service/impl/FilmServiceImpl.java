@@ -11,7 +11,9 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,21 +22,24 @@ public class FilmServiceImpl implements FilmService {
 
 
     private long id = 0;
-    private FilmStorage filmStorage;
-    private UserStorage userStorage;
-    private CheckingService<Film> checkingService;
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
+    private final CheckingService<Film> checkingService;
 
     @Override
     public Film create(Film film) {
         id++;
+        film.setLikes(new HashSet<>());
         film.setId(id);
         return filmStorage.create(film);
     }
 
     @Override
-    public void update(Film film) {
+    public Film update(Film film) {
         Film updating = getIfPresent(film.getId());
+        film.setLikes(updating.getLikes());
         filmStorage.update(film);
+        return film;
     }
 
     @Override
@@ -48,17 +53,18 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public void updateLikes(long id, long userId, RequestMethod method) {
+    public void updateLikes(long id, int userId, RequestMethod method) {
         Film film = getIfPresent(id);
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         switch (method) {
             case PUT:
                 film.addLike(userId);
-                update(film);
+                filmStorage.update(film);
                 break;
             case DELETE:
                 film.deleteLike(userId);
+                filmStorage.update(film);
                 break;
             default:
                 throw new NotFoundException("Unsupported method");
@@ -83,7 +89,7 @@ public class FilmServiceImpl implements FilmService {
 
         @Override
         public int compare(Film o1, Film o2) {
-            return o1.getLikes().size() - o2.getLikes().size();
+            return o2.getLikes().size() - o1.getLikes().size();
         }
     }
 

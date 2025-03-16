@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.exception;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 import java.io.PrintWriter;
@@ -10,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
+@Getter
 public class ApiError {
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 

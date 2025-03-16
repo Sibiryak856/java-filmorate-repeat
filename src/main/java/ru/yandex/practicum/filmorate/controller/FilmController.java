@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmController {
 
-    private FilmService service;
+    private final FilmService service;
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
@@ -29,10 +29,11 @@ public class FilmController {
     }
 
     @PutMapping
-    public void update(@Valid @RequestBody Film film) {
+    public Film update(@Valid @RequestBody Film film) {
         log.info("Request received: PUT /films: {}", film);
-        service.update(film);
+        Film updated = service.update(film);
         log.info("Request PUT processed");
+        return updated;
     }
 
     @GetMapping("/{id}")
@@ -53,7 +54,7 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable Long id,
-                        @PathVariable Long userId) {
+                        @PathVariable Integer userId) {
         log.info("Request received: PUT /films/{}/like/{}", id, userId);
         service.updateLikes(id, userId, RequestMethod.PUT);
         log.info("Request PUT processed");
@@ -61,13 +62,13 @@ public class FilmController {
 
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable Long id,
-                        @PathVariable Long userId) {
+                        @PathVariable Integer userId) {
         log.info("Request received: DELETE /films/{}/like/{}", id, userId);
         service.updateLikes(id, userId, RequestMethod.DELETE);
         log.info("Request DELETE processed");
     }
 
-    @GetMapping("/popular?count={count}")
+    @GetMapping("/popular")
     public List<Film> getPopular(
             @RequestParam (defaultValue = "10", required = false) @Positive Integer count) {
         log.info("Request received: Get /films/popular?count={}", count);

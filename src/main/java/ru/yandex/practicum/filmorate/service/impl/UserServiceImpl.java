@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.service.CheckingService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,20 +18,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private long id = 0;
-    private UserStorage storage;
-    private CheckingService<User> checkingService;
+    private final UserStorage storage;
+    private final CheckingService<User> checkingService;
 
     @Override
     public User create(User user) {
         id++;
         user.setId(id);
+        user.setFriends(new HashSet<>());
         return storage.create(user);
     }
 
     @Override
-    public void update(User user) {
+    public User update(User user) {
         User updating = getIfPresent(user.getId());
+        user.setFriends(updating.getFriends());
         storage.update(user);
+        return user;
     }
 
     @Override
@@ -46,26 +50,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateFriendship(long id, long friendId, RequestMethod method) {
         User user = getIfPresent(id);
-        User addedFriends = getIfPresent(id);
+        User friend = getIfPresent(friendId);
         switch (method) {
             case PUT:
                 user.addFriend(friendId);
-                update(user);
+                friend.addFriend(id);
                 break;
             case DELETE:
                 user.deleteFriend(friendId);
-                update(user);
+                friend.deleteFriend(id);
                 break;
             default:
                 throw new NotFoundException("Unsupported method");
         }
+        storage.update(user);
+        storage.update(friend);
     }
 
     @Override
     public List<User> getUserFriends(long id) {
-        Set<Long> friends = storage.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found"))
-                .getFriends();
+        Set<Long> friends = getIfPresent(id).getFriends();
 
         return friends.stream()
                 .map(friendId -> storage.findById(friendId).get())
@@ -74,12 +78,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getCommonFriends(long id, long otherId) {
-        User user = storage.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        User otherUser = storage.findById(otherId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Set<Long> userFriends = user.getFriends();
-        Set<Long> otherUserFriends = otherUser.getFriends();
+        Set<Long> userFriends = getIfPresent(id).getFriends();
+        Set<Long> otherUserFriends = getIfPresent(otherId).getFriends();
         return userFriends.stream()
                 .filter(otherUserFriends::contains)
                 .map(friendId -> storage.findById(friendId).get())
@@ -87,8 +87,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private User getIfPresent(long id) {
-        return checkingService.getIfPresent(
-                storage.findById(id), User.class.getSimpleName());
+        return checkingService.getIfPresent(storage.findById(id), User.class.getSimpleName());
     }
 
 }
