@@ -1,52 +1,90 @@
 package ru.yandex.practicum.filmorate.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMethod;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.CheckingService;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class FilmServiceImpl implements FilmService {
 
-    private Map<Long, Film> films;
-    private long id = 0;
 
-    public FilmServiceImpl() {
-        this.films = new HashMap<>();
-    }
+    private long id = 0;
+    private FilmStorage filmStorage;
+    private UserStorage userStorage;
+    private CheckingService<Film> checkingService;
 
     @Override
     public Film create(Film film) {
         id++;
         film.setId(id);
-        films.put(id, film);
-        return film;
+        return filmStorage.create(film);
     }
 
     @Override
     public void update(Film film) {
-        if (!films.containsKey(film.getId())) {
-            throw new NotFoundException("Film not found");
-        }
-        films.put(film.getId(), film);
+        Film updating = getIfPresent(film.getId());
+        filmStorage.update(film);
     }
 
     @Override
     public Film getById(long id) {
-        if (!films.containsKey(id)) {
-            throw new NotFoundException("Film not found");
-        }
-        return films.get(id);
+        return getIfPresent(id);
     }
 
     @Override
     public List<Film> getAll() {
-        return new ArrayList<>(films.values());
+        return filmStorage.getAll();
+    }
+
+    @Override
+    public void updateLikes(long id, long userId, RequestMethod method) {
+        Film film = getIfPresent(id);
+        User user = userStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        switch (method) {
+            case PUT:
+                film.addLike(userId);
+                update(film);
+                break;
+            case DELETE:
+                film.deleteLike(userId);
+                break;
+            default:
+                throw new NotFoundException("Unsupported method");
+        }
+    }
+
+    @Override
+    public List<Film> getPopular(int count) {
+        return filmStorage.getAll().stream()
+                .sorted(new TopFilmsComparator())
+                .limit(count)
+                .collect(Collectors.toList());
+    }
+
+
+    private Film getIfPresent(long id) {
+        return checkingService.getIfPresent(
+                filmStorage.findById(id), Film.class.getSimpleName());
+    }
+
+    private class TopFilmsComparator implements Comparator<Film> {
+
+        @Override
+        public int compare(Film o1, Film o2) {
+            return o1.getLikes().size() - o2.getLikes().size();
+        }
     }
 
 }
