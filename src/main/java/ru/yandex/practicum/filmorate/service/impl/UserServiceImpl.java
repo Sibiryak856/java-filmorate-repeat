@@ -54,17 +54,14 @@ public class UserServiceImpl implements UserService {
         switch (method) {
             case PUT:
                 user.addFriend(friendId);
-                friend.addFriend(id);
                 break;
             case DELETE:
                 user.deleteFriend(friendId);
-                friend.deleteFriend(id);
                 break;
             default:
                 throw new NotFoundException("Unsupported method");
         }
         storage.update(user);
-        storage.update(friend);
     }
 
     @Override

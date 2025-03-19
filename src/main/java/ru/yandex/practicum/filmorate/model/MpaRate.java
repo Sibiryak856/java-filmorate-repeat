@@ -1,22 +1,13 @@
 package ru.yandex.practicum.filmorate.model;
 
-public enum MpaRate {
-    G,
-    PG,
-    PG_13,
-    R,
-    NC_17;
+import lombok.Builder;
+import lombok.Data;
 
-    private int id;
+@Data
+@Builder
+public class MpaRate {
+
+    private Long id;
     private String name;
-    private String description;
 
-    MpaRate() {
-    }
-
-    MpaRate(int id, String name, String description) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-    }
 }
