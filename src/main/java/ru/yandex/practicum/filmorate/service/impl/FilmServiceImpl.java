@@ -76,13 +76,30 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public List<Film> getPopular(int count) {
-        return filmStorage.getAll().stream()
-                .sorted(new TopFilmsComparator())
-                .peek(film -> film.setGenres(
-                        genreStorage.findAllByFilmId(film.getId())))
-                .limit(count)
-                .collect(Collectors.toList());
+    public List<Film> getPopular(int count, long genreId, int year) {
+        if (genreId != 0 && year != 0) {
+            return filmStorage.getFilmsByGenreAndYear(genreId, year).stream()
+                    .sorted(new TopFilmsComparator())
+                    .peek(film -> film.setGenres(
+                            genreStorage.findAllByFilmId(film.getId())))
+                    .limit(count)
+                    .collect(Collectors.toList());
+        } else if (genreId != 0) {
+            return filmStorage.getFilmsByGenre(genreId).stream()
+                    .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                    .limit(count)
+                    .collect(Collectors.toList());
+        } else if (year != 0) {
+            return filmStorage.getFilmsByYear(year).stream()
+                    .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                    .limit(count)
+                    .collect(Collectors.toList());
+        } else {
+            return filmStorage.getAll().stream()
+                    .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                    .limit(count)
+                    .collect(Collectors.toList());
+        }
     }
 
     @Override

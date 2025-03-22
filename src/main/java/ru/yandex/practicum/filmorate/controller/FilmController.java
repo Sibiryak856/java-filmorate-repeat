@@ -70,9 +70,11 @@ public class FilmController {
 
     @GetMapping("/popular")
     public List<Film> getPopular(
-            @RequestParam (defaultValue = "10", required = false) @Positive Integer count) {
-        log.info("Request received: Get /films/popular?count={}", count);
-        List<Film> films = service.getPopular(count);
+            @RequestParam (defaultValue = "10", required = false) @Positive Integer count,
+            @RequestParam (defaultValue = "0") Long genreId,
+            @RequestParam (defaultValue = "0") Integer year) {
+        log.info("Request received: Get /films/popular?count={}&genreId={}&year={}", count, genreId, year);
+        List<Film> films = service.getPopular(count, genreId, year);
         log.info("Request GET processed");
         return films;
     }

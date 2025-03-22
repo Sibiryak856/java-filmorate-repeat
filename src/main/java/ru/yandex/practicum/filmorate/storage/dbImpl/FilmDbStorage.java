@@ -112,6 +112,46 @@ public class FilmDbStorage implements FilmStorage {
                 this::makeFilm);
     }
 
+    @Override
+    public List<Film> getFilmsByGenreAndYear(long genreId, int year) {
+        return jdbcTemplate.query(
+                "SELECT f.*, mpa.mpa_name " +
+                        "FROM films as f " +
+                        "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                        "JOIN film_genres AS fg ON f.film_id = fg.film_id " +
+                        "WHERE fg.genre_id = :genreId " +
+                        "AND EXTRACT(YEAR FROM CAST(f.release_date AS date)) = :year",
+                new MapSqlParameterSource()
+                        .addValue("genreId", genreId)
+                        .addValue("year", year),
+                this::makeFilm);
+    }
+
+    @Override
+    public List<Film> getFilmsByGenre(long genreId) {
+        return jdbcTemplate.query(
+                "SELECT f.*, mpa.mpa_name " +
+                        "FROM films as f " +
+                        "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                        "JOIN film_genres AS fg ON f.film_id = fg.film_id " +
+                        "WHERE fg.genre_id = :genreId",
+                new MapSqlParameterSource()
+                        .addValue("genreId", genreId),
+                this::makeFilm);
+    }
+
+    @Override
+    public List<Film> getFilmsByYear(int year) {
+        return jdbcTemplate.query(
+                "SELECT f.*, mpa.mpa_name " +
+                        "FROM films as f " +
+                        "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                        "WHERE EXTRACT(YEAR FROM CAST(f.release_date AS date)) = :year",
+                new MapSqlParameterSource()
+                        .addValue("year", year),
+                this::makeFilm);
+    }
+
 
     private void updateGenres(long filmId, List<Genre> genres) {
         if (genres != null && !genres.isEmpty() ) {

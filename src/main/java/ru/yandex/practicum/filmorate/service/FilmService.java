@@ -14,7 +14,7 @@ public interface FilmService {
 
     void updateLikes(long id, long userId, RequestMethod requestMethod);
 
-    List<Film> getPopular(int count);
+    List<Film> getPopular(int count, long genreId, int year);
 
     List<Film> getCommonFilms(long userId, long friendId);
 }
