@@ -9,8 +9,8 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.PastOrPresent;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Data
 @Builder
@@ -23,16 +23,7 @@ public class User {
     private String name;
     @PastOrPresent
     private LocalDate birthday;
-    private Set<Long> friends;
-
-
-    public void addFriend(long friendId) {
-        friends.add(friendId);
-    }
-
-    public void deleteFriend(long friendId) {
-        friends.remove(friendId);
-    }
+    private List<User> friends;
 
     public Map<String,Object> toMap() {
         Map<String, Object> values = new HashMap<>();

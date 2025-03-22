@@ -9,23 +9,18 @@ import ru.yandex.practicum.filmorate.service.CheckingService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private long id = 0;
+
     private final UserStorage storage;
     private final CheckingService<User> checkingService;
 
     @Override
     public User create(User user) {
-        id++;
-        user.setId(id);
-        user.setFriends(new HashSet<>());
         return storage.create(user);
     }
 
@@ -49,37 +44,35 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateFriendship(long id, long friendId, RequestMethod method) {
-        User user = getIfPresent(id);
-        User friend = getIfPresent(friendId);
+        getIfPresent(id);
+        getIfPresent(friendId);
         switch (method) {
             case PUT:
-                user.addFriend(friendId);
+                storage.addFriend(id, friendId);
                 break;
             case DELETE:
-                user.deleteFriend(friendId);
+                storage.removeFriend(id, friendId);
                 break;
             default:
                 throw new NotFoundException("Unsupported method");
         }
-        storage.update(user);
     }
 
     @Override
     public List<User> getUserFriends(long id) {
-        Set<Long> friends = getIfPresent(id).getFriends();
-
-        return friends.stream()
-                .map(friendId -> storage.findById(friendId).get())
-                .collect(Collectors.toList());
+        getIfPresent(id);
+        return storage.getUserFriends(id);
     }
 
     @Override
     public List<User> getCommonFriends(long id, long otherId) {
-        Set<Long> userFriends = getIfPresent(id).getFriends();
-        Set<Long> otherUserFriends = getIfPresent(otherId).getFriends();
+        getIfPresent(id);
+        getIfPresent(otherId);
+        List<User> userFriends = storage.getUserFriends(id);
+        List<User> otherUserFriends = storage.getUserFriends(otherId);
+
         return userFriends.stream()
                 .filter(otherUserFriends::contains)
-                .map(friendId -> storage.findById(friendId).get())
                 .collect(Collectors.toList());
     }
 

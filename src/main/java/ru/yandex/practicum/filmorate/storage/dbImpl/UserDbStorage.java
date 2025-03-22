@@ -58,6 +58,34 @@ public class UserDbStorage implements UserStorage {
         );
     }
 
+    @Override
+    public void addFriend(long userId, long friendId) {
+        jdbcTemplate.update(
+                "INSERT INTO user_friends (user_id, fiend_id) VALUES(?, ?)",
+                userId,
+                friendId
+        );
+    }
+
+    @Override
+    public void removeFriend(long userId, long friendId) {
+        jdbcTemplate.update(
+                "DELETE FROM likes WHERE user_id = ? AND friend_id = ?",
+                userId,
+                friendId
+        );
+    }
+
+    @Override
+    public List<User> getUserFriends(long userId) {
+        String sql = "SELECT u.* " +
+                "FROM users AS u " +
+                "JOIN user_friends AS uf ON u.user_id = uf.user_id " +
+                "WHERE u.user_id = ?";
+        return jdbcTemplate.query(sql, this::makeUser);
+    }
+
+
     private User makeUser(ResultSet rs, int i) throws SQLException {
         return User.builder()
                 .id(rs.getLong("user_id"))
