@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS user_friends (
 	friend_id BIGINT NOT NULL,
 	UNIQUE (user_id, friend_id),
 	CONSTRAINT user_friends_pk PRIMARY KEY (user_id, friend_id),
-	CONSTRAINT user_friends_fk FOREIGN KEY (user_id) REFERENCES users(user_id)
+	CONSTRAINT user_friends_fk FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS films (

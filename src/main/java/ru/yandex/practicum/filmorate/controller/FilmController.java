@@ -73,7 +73,7 @@ public class FilmController {
             @RequestParam (defaultValue = "10", required = false) @Positive Integer count,
             @RequestParam (defaultValue = "0") Long genreId,
             @RequestParam (defaultValue = "0") Integer year) {
-        log.info("Request received: Get /films/popular?count={}&genreId={}&year={}", count, genreId, year);
+        log.info("Request received: GET /films/popular?count={}&genreId={}&year={}", count, genreId, year);
         List<Film> films = service.getPopular(count, genreId, year);
         log.info("Request GET processed");
         return films;
@@ -82,10 +82,17 @@ public class FilmController {
     @GetMapping("/common")
     public List<Film> getCommonFilmsByTwoUser(@RequestParam Long userId,
                                               @RequestParam Long friendId) {
-        log.info("Request received: Get /films/common?userId={}&friendId={}", userId, friendId);
+        log.info("Request received: GET /films/common?userId={}&friendId={}", userId, friendId);
         List<Film> films = service.getCommonFilms(userId, friendId);
         log.info("Request GET processed");
         return films;
+    }
+
+    @DeleteMapping("/{filmId}")
+    public void deleteById(@PathVariable Long filmId) {
+        log.info("Request received: DELETE /films/filmId = {}", filmId);
+        service.deleteById(filmId);
+        log.info("Request DELETE processed");
     }
 
 }

@@ -111,6 +111,11 @@ public class FilmServiceImpl implements FilmService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void deleteById(long filmId) {
+        filmStorage.deleteById(filmId);
+    }
+
 
     private Film getIfPresent(long id) {
         return validateService.getIfPresent(

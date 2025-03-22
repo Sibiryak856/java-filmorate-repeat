@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
@@ -82,5 +83,13 @@ public class UserController {
         List<User> users = service.getCommonFriends(id, otherId);
         log.info("Request GET processed: {}", users);
         return users;
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{userId}")
+    public void deleteById(@PathVariable Long userId) {
+        log.info("Request received: DELETE /users/userId = {}", userId);
+        service.deleteById(userId);
+        log.info("Request DELETE processed");
     }
 }

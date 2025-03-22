@@ -152,6 +152,14 @@ public class FilmDbStorage implements FilmStorage {
                 this::makeFilm);
     }
 
+    @Override
+    public void deleteById(long filmId) {
+        jdbcTemplate.update(
+                "DELETE FROM films WHERE film_id = :filmId",
+                new MapSqlParameterSource()
+                        .addValue("filmId", filmId));
+    }
+
 
     private void updateGenres(long filmId, List<Genre> genres) {
         if (genres != null && !genres.isEmpty() ) {

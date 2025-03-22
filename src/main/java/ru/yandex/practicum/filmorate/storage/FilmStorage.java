@@ -20,4 +20,6 @@ public interface FilmStorage {
     List<Film> getFilmsByGenre(long genreId);
 
     List<Film> getFilmsByYear(int year);
+
+    void deleteById(long filmId);
 }

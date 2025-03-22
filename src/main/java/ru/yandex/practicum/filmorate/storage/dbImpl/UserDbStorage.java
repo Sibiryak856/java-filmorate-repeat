@@ -98,6 +98,14 @@ public class UserDbStorage implements UserStorage {
                 this::makeUser);
     }
 
+    @Override
+    public void deleteById(long userId) {
+        jdbcTemplate.update(
+                "DELETE FROM users WHERE user_id = :userId",
+                new MapSqlParameterSource()
+                        .addValue("userId", userId));
+    }
+
 
     private User makeUser(ResultSet rs, int i) throws SQLException {
         return User.builder()

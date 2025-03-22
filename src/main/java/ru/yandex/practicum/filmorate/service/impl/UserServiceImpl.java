@@ -76,6 +76,11 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void deleteById(long userId) {
+        storage.deleteById(userId);
+    }
+
     private User getIfPresent(long id) {
         return validateService.getIfPresent(storage.findById(id), User.class.getSimpleName());
     }
