@@ -77,25 +77,40 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public void addLike(long userId, long filmId) {
+    public void addLike(long filmId, long userId) {
         jdbcTemplate.update(
                 "INSERT INTO likes (user_id, film_id) VALUES(:userId, :filmId)",
                 new MapSqlParameterSource()
-                        .addValue("userId", userId)
                         .addValue("filmId", filmId)
+                        .addValue("userId", userId)
         );
     }
 
     @Override
-    public void removeLike(long userId, long filmId) {
+    public void removeLike(long filmId, long userId) {
         jdbcTemplate.update(
-                "DELETE FROM likes WHERE user_id = :userId AND film_id = :filmId",
+                "DELETE FROM likes WHERE film_id = :filmId AND user_id = :userId",
                 new MapSqlParameterSource()
-                        .addValue("userId", userId)
                         .addValue("filmId", filmId)
+                        .addValue("userId", userId)
         );
     }
 
+    @Override
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        return jdbcTemplate.query(
+                "SELECT f.*, mpa.mpa_name " +
+                        "FROM films as f " +
+                        "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                        "JOIN likes AS l ON f.film_id = l.film_id " +
+                        "WHERE l.user_id IN (:userId, :friendId) " +
+                        "GROUP BY f.film_id " +
+                        "HAVING COUNT(f.film_id) > 1",
+                new MapSqlParameterSource()
+                        .addValue("userId", userId)
+                        .addValue("friendId", friendId),
+                this::makeFilm);
+    }
 
 
     private void updateGenres(long filmId, List<Genre> genres) {

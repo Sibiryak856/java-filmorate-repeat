@@ -59,16 +59,16 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public void updateLikes(long filmId, int userId, RequestMethod method) {
+    public void updateLikes(long filmId, long userId, RequestMethod method) {
         getIfPresent(filmId);
         userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         switch (method) {
             case PUT:
-                filmStorage.addLike(userId, filmId);
+                filmStorage.addLike(filmId, userId);
                 break;
             case DELETE:
-                filmStorage.removeLike(userId, filmId);
+                filmStorage.removeLike(filmId, userId);
                 break;
             default:
                 throw new NotFoundException("Unsupported method");
@@ -82,6 +82,15 @@ public class FilmServiceImpl implements FilmService {
                 .peek(film -> film.setGenres(
                         genreStorage.findAllByFilmId(film.getId())))
                 .limit(count)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        return filmStorage.getCommonFilms(userId, friendId).stream()
+                .sorted(new TopFilmsComparator())
+                .peek(film -> film.setGenres(
+                        genreStorage.findAllByFilmId(film.getId())))
                 .collect(Collectors.toList());
     }
 

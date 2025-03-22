@@ -12,7 +12,9 @@ public interface FilmService {
     Film getById(long id);
     List<Film> getAll();
 
-    void updateLikes(long id, int userId, RequestMethod requestMethod);
+    void updateLikes(long id, long userId, RequestMethod requestMethod);
 
     List<Film> getPopular(int count);
+
+    List<Film> getCommonFilms(long userId, long friendId);
 }

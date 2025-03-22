@@ -54,7 +54,7 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable Long id,
-                        @PathVariable Integer userId) {
+                        @PathVariable Long userId) {
         log.info("Request received: PUT /films/{}/like/{}", id, userId);
         service.updateLikes(id, userId, RequestMethod.PUT);
         log.info("Request PUT processed");
@@ -62,7 +62,7 @@ public class FilmController {
 
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable Long id,
-                        @PathVariable Integer userId) {
+                           @PathVariable Long userId) {
         log.info("Request received: DELETE /films/{}/like/{}", id, userId);
         service.updateLikes(id, userId, RequestMethod.DELETE);
         log.info("Request DELETE processed");
@@ -76,4 +76,14 @@ public class FilmController {
         log.info("Request GET processed");
         return films;
     }
+
+    @GetMapping("/common")
+    public List<Film> getCommonFilmsByTwoUser(@RequestParam Long userId,
+                                              @RequestParam Long friendId) {
+        log.info("Request received: Get /films/common?userId={}&friendId={}", userId, friendId);
+        List<Film> films = service.getCommonFilms(userId, friendId);
+        log.info("Request GET processed");
+        return films;
+    }
+
 }

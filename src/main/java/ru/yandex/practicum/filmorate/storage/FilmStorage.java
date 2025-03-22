@@ -10,6 +10,8 @@ public interface FilmStorage {
     void update(Film film);
     Optional<Film> findById(long id);
     List<Film> getAll();
-    void addLike(long userId, long filmId);
-    void removeLike(long userId, long filmId);
+    void addLike(long filmId, long userId);
+    void removeLike(long filmId, long userId);
+
+    List<Film> getCommonFilms(long userId, long friendId);
 }
