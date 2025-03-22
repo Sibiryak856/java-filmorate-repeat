@@ -1,12 +1,13 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.memImpl;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
 
-@Component
-public class InMemoryUserStorage implements UserStorage{
+@Component("memory")
+public class InMemoryUserStorage implements UserStorage {
 
     private Map<Long, User> users;
 
