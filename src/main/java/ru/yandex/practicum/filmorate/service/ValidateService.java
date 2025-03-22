@@ -10,7 +10,7 @@ import java.util.Optional;
 @Data
 @Component
 @NoArgsConstructor
-public class CheckingService<T> {
+public class ValidateService<T> {
 
     public T getIfPresent(Optional<T> t, String typeName) {
         return t.orElseThrow(() ->

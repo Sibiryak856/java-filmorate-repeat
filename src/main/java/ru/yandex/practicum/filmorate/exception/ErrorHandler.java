@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ConstraintViolationException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,6 +62,14 @@ public class ErrorHandler {
         });
         log.info(errors.toString());
         return new ApiError(e, e.getMessage(), "Incorrectly made request.", HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiError handleSQLException(final SQLException e) {
+        String errorMsg = "Unexpected database error";
+        log.error(errorMsg, e);
+        return new ApiError(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler

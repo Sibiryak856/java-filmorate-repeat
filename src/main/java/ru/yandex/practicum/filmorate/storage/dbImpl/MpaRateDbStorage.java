@@ -1,10 +1,11 @@
 package ru.yandex.practicum.filmorate.storage.dbImpl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.storage.MpaRateStorage;
 import ru.yandex.practicum.filmorate.model.MpaRate;
+import ru.yandex.practicum.filmorate.storage.MpaRateStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,16 +16,23 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MpaRateDbStorage implements MpaRateStorage {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
 
     @Override
     public Optional<MpaRate> findById(long id) {
-        return Optional.ofNullable(
-                jdbcTemplate.queryForObject(
-                        "SELECT * FROM mpa WHERE mpa_id = ?",
-                        this::makeMpa,
-                        id)
-        );
+        return jdbcTemplate.query(
+                "SELECT * " +
+                        "FROM mpa " +
+                        "WHERE mpa_id = :id",
+                new MapSqlParameterSource()
+                        .addValue("id", id),
+                rs -> {
+                    if (!rs.next()) {
+                        return Optional.empty();
+                    }
+                    return Optional.of(
+                            makeMpa(rs, 1));
+                });
     }
 
     @Override

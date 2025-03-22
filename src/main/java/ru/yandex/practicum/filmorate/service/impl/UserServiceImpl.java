@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.CheckingService;
+import ru.yandex.practicum.filmorate.service.ValidateService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserStorage storage;
-    private final CheckingService<User> checkingService;
+    private final ValidateService<User> validateService;
 
     @Override
     public User create(User user) {
@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private User getIfPresent(long id) {
-        return checkingService.getIfPresent(storage.findById(id), User.class.getSimpleName());
+        return validateService.getIfPresent(storage.findById(id), User.class.getSimpleName());
     }
 
 }

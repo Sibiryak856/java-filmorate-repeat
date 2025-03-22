@@ -9,4 +9,5 @@ public interface MpaRateStorage {
 
     Optional<MpaRate> findById(long id);
     List<MpaRate> findAll();
+
 }
