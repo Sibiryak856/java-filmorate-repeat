@@ -6,6 +6,8 @@ import javax.validation.constraints.NotBlank;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Director {
 
     private Long id;

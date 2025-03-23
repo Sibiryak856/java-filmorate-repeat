@@ -21,4 +21,6 @@ public interface FilmService {
     void deleteById(long filmId);
 
     List<Film> getFilmByDirectorId(long directorId, String sortBy);
+
+    List<Film> searchFilms(String query, String by);
 }

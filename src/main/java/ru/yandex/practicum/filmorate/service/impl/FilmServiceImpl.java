@@ -11,8 +11,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.ValidateService;
 import ru.yandex.practicum.filmorate.storage.*;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -132,6 +131,43 @@ public class FilmServiceImpl implements FilmService {
             default:
                 throw new NotFoundException(String.format("Unsupported sortBy params %s", sortBy));
         }
+    }
+
+    @Override
+    public List<Film> searchFilms(String query, String by) {
+        List<Film> filmList = filmStorage.getAll();
+        Set<Film> searchedFilms = new HashSet<>();
+        String lowQuery = query.toLowerCase();
+        for (Film film : filmList) {
+            setGenreAndDirector(film);
+            if (by.contains("title") && by.contains("director")) {
+                if (film.getName().toLowerCase().contains(lowQuery)) {
+                    searchedFilms.add(film);
+                }
+                List<String> directorsName = film.getDirectors().stream().map(Director::getName).collect(Collectors.toList());
+                directorsName.stream()
+                        .filter(directorName -> directorName.toLowerCase().contains(lowQuery))
+                        .map(directorName -> film)
+                        .peek(this::setGenreAndDirector)
+                        .forEachOrdered(searchedFilms::add);
+            } else if (by.contains("director")) {
+                List<String> directorsName = film.getDirectors().stream().map(Director::getName).collect(Collectors.toList());
+                directorsName.stream()
+                        .filter(directorName -> directorName.toLowerCase().contains(lowQuery))
+                        .map(directorName -> film)
+                        .peek(this::setGenreAndDirector)
+                        .forEachOrdered(searchedFilms::add);
+            } else if (by.contains("title")) {
+                if (film.getName().toLowerCase().contains(lowQuery)) {
+                    searchedFilms.add(film);
+                }
+            } else {
+                throw new NotFoundException("Unsupported request query");
+            }
+        }
+        return searchedFilms.stream()
+                .sorted(new TopFilmsComparator())
+                .collect(Collectors.toList());
     }
 
     private void setGenreAndDirector(Film film) {

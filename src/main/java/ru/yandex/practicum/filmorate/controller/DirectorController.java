@@ -30,7 +30,7 @@ public class DirectorController {
     }
 
     @PutMapping
-    public Director update(@RequestBody Director director) {
+    public Director update(@Valid @RequestBody Director director) {
         log.info("Request received: PUT /directors: {}", director);
         Director updated = service.update(director);
         log.info("Request PUT processed: {}", updated);

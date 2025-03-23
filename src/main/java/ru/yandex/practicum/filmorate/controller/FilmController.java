@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -88,6 +89,16 @@ public class FilmController {
         log.info("Request received: GET /films/director/{}?sortBy={}", directorId, sortBy);
         List<Film> films = service.getFilmByDirectorId(directorId, sortBy);
         log.info("Request GET processed");
+        return films;
+    }
+
+    @Valid
+    @GetMapping("/search")
+    public List<Film> search(@RequestParam String query,
+                             @RequestParam @NonNull String by) {
+        log.info("Request received: GET /films/search?query={}}&by={}", query, by);
+        List<Film> films = service.searchFilms(query, by);
+        log.info("Request GET processed: {}", films);
         return films;
     }
 

@@ -179,6 +179,47 @@ public class FilmDbStorage implements FilmStorage {
                 this::makeFilm);
     }
 
+    @Override
+    public List<Film> getFilmByTitle(String query) {
+        return jdbcTemplate.query(
+                "SELECT f.*, mpa.mpa_name " +
+                        "FROM films as f " +
+                        "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                        "WHERE LOWER(f.film_name) LIKE :query",
+                new MapSqlParameterSource()
+                        .addValue("query", query),
+                this::makeFilm);
+    }
+
+    @Override
+    public List<Film> getFilmByDirectorName(String lowQuery) {
+        return jdbcTemplate.query(
+                "SELECT f.*, mpa.mpa_name " +
+                        "FROM films as f " +
+                        "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                        "JOIN film_directors AS fd ON f.film_id = fd.film_id " +
+                        "JOIN directors AS d ON fd.director_id = d.director_id " +
+                        "WHERE LOWER(d.director_name) LIKE :query",
+                new MapSqlParameterSource()
+                        .addValue("query", lowQuery),
+                this::makeFilm);
+    }
+
+    @Override
+    public List<Film> getFilmByDirectorNameAndTitle(String lowQuery) {
+        return jdbcTemplate.query(
+                "SELECT f.*, mpa.mpa_name " +
+                        "FROM films as f " +
+                        "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                        "JOIN film_directors AS fd ON f.film_id = fd.film_id " +
+                        "JOIN directors AS d ON fd.director_id = d.director_id " +
+                        "WHERE LOWER(d.director_name) ILIKE ':query' " +
+                        "OR LOWER(f.film_name) ILIKE ':query'",
+                new MapSqlParameterSource()
+                        .addValue("query", lowQuery),
+                this::makeFilm);
+    }
+
 
     private void updateGenres(long filmId, List<Genre> genres) {
         if (genres != null && !genres.isEmpty() ) {

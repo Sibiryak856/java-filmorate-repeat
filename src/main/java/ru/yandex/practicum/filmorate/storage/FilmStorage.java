@@ -24,4 +24,10 @@ public interface FilmStorage {
     void deleteById(long filmId);
 
     List<Film> getFilmByDirectorId(long directorId);
+
+    List<Film> getFilmByTitle(String query);
+
+    List<Film> getFilmByDirectorName(String lowQuery);
+
+    List<Film> getFilmByDirectorNameAndTitle(String lowQuery);
 }
