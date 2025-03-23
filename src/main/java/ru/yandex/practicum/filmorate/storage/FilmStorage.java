@@ -22,4 +22,6 @@ public interface FilmStorage {
     List<Film> getFilmsByYear(int year);
 
     void deleteById(long filmId);
+
+    List<Film> getFilmByDirectorId(long directorId);
 }

@@ -27,5 +27,6 @@ public class Film {
     private Set<Long> likes;
     private MpaRate mpa;
     private List<Genre> genres;
+    private List<Director> directors;
 
 }

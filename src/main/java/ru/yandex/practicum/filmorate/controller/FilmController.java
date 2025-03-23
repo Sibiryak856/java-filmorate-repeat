@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -20,6 +21,7 @@ public class FilmController {
 
     private final FilmService service;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Request received: POST /films: {}", film);
@@ -32,7 +34,7 @@ public class FilmController {
     public Film update(@Valid @RequestBody Film film) {
         log.info("Request received: PUT /films: {}", film);
         Film updated = service.update(film);
-        log.info("Request PUT processed");
+        log.info("Request PUT processed: {}", updated);
         return updated;
     }
 
@@ -75,6 +77,16 @@ public class FilmController {
             @RequestParam (defaultValue = "0") Integer year) {
         log.info("Request received: GET /films/popular?count={}&genreId={}&year={}", count, genreId, year);
         List<Film> films = service.getPopular(count, genreId, year);
+        log.info("Request GET processed");
+        return films;
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmByDirector(
+            @PathVariable Long directorId,
+            @RequestParam String sortBy) {
+        log.info("Request received: GET /films/director/{}?sortBy={}", directorId, sortBy);
+        List<Film> films = service.getFilmByDirectorId(directorId, sortBy);
         log.info("Request GET processed");
         return films;
     }

@@ -19,14 +19,14 @@ public class ApiError {
 
     @JsonIgnore
     private List<StackTraceElement> errors;
-    private String message;
+    private String error;
     private String reason;
     private String status;
     private String timestamp;
 
     public ApiError(Exception e, String message, String reason, HttpStatus status) {
         this.errors = Arrays.asList(e.getStackTrace());
-        this.message = message;
+        this.error = message;
         this.reason = reason;
         this.status = status.getReasonPhrase().toUpperCase();
         this.timestamp = LocalDateTime.now().format(FORMATTER);
@@ -34,7 +34,7 @@ public class ApiError {
 
     public ApiError(Exception e, HttpStatus status) {
         this.errors = Arrays.asList(e.getStackTrace());
-        this.message = stackTraceToString(e);
+        this.error = stackTraceToString(e);
         this.reason = "Unexpected error occurred";
         this.status = status.getReasonPhrase().toUpperCase();
         this.timestamp = LocalDateTime.now().format(FORMATTER);

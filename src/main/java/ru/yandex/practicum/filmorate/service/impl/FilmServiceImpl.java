@@ -4,14 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.ValidateService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.MpaRateStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 
 import java.util.Comparator;
 import java.util.List;
@@ -26,17 +24,18 @@ public class FilmServiceImpl implements FilmService {
     private final UserStorage userStorage;
     private final GenreStorage genreStorage;
     private final MpaRateStorage mpaRateStorage;
+    private final DirectorStorage directorStorage;
     private final ValidateService<Film> validateService;
 
     @Override
     public Film create(Film film) {
-        checkGenreAndMpaIsPresent(film);
+        checkFieldDataIsPresent(film);
         return filmStorage.create(film);
     }
 
     @Override
     public Film update(Film film) {
-        checkGenreAndMpaIsPresent(film);
+        checkFieldDataIsPresent(film);
         getIfPresent(film.getId());
         filmStorage.update(film);
         return film;
@@ -45,16 +44,14 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film getById(long id) {
         Film film = getIfPresent(id);
-        film.setGenres(genreStorage.findAllByFilmId(id));
+        setGenreAndDirector(film);
         return film;
     }
 
     @Override
     public List<Film> getAll() {
         List<Film> films = filmStorage.getAll();
-        films.forEach(
-                film -> film.setGenres(
-                        genreStorage.findAllByFilmId(film.getId())));
+        films.forEach(this::setGenreAndDirector);
         return films;
     }
 
@@ -80,23 +77,25 @@ public class FilmServiceImpl implements FilmService {
         if (genreId != 0 && year != 0) {
             return filmStorage.getFilmsByGenreAndYear(genreId, year).stream()
                     .sorted(new TopFilmsComparator())
-                    .peek(film -> film.setGenres(
-                            genreStorage.findAllByFilmId(film.getId())))
+                    .peek(this::setGenreAndDirector)
                     .limit(count)
                     .collect(Collectors.toList());
         } else if (genreId != 0) {
             return filmStorage.getFilmsByGenre(genreId).stream()
-                    .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                    .sorted(new TopFilmsComparator())
+                    .peek(this::setGenreAndDirector)
                     .limit(count)
                     .collect(Collectors.toList());
         } else if (year != 0) {
             return filmStorage.getFilmsByYear(year).stream()
-                    .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                    .sorted(new TopFilmsComparator())
+                    .peek(this::setGenreAndDirector)
                     .limit(count)
                     .collect(Collectors.toList());
         } else {
             return filmStorage.getAll().stream()
-                    .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                    .sorted(new TopFilmsComparator())
+                    .peek(this::setGenreAndDirector)
                     .limit(count)
                     .collect(Collectors.toList());
         }
@@ -116,15 +115,47 @@ public class FilmServiceImpl implements FilmService {
         filmStorage.deleteById(filmId);
     }
 
+    @Override
+    public List<Film> getFilmByDirectorId(long directorId, String sortBy) {
+        List<Film> films = filmStorage.getFilmByDirectorId(directorId);
+        switch (sortBy) {
+            case "year":
+                return films.stream()
+                        .sorted(Comparator.comparing(Film::getReleaseDate))
+                        .peek(this::setGenreAndDirector)
+                        .collect(Collectors.toList());
+            case "likes":
+                return films.stream()
+                        .sorted(new TopFilmsComparator())
+                        .peek(this::setGenreAndDirector)
+                        .collect(Collectors.toList());
+            default:
+                throw new NotFoundException(String.format("Unsupported sortBy params %s", sortBy));
+        }
+    }
+
+    private void setGenreAndDirector(Film film) {
+        film.setGenres(
+                genreStorage.findAllByFilmId(film.getId()));
+        film.setDirectors(
+                directorStorage.findAllByFilmId(film.getId()));
+    }
 
     private Film getIfPresent(long id) {
         return validateService.getIfPresent(
                 filmStorage.findById(id), Film.class.getSimpleName());
     }
 
-    private void checkGenreAndMpaIsPresent(Film film) {
+    private void checkFieldDataIsPresent(Film film) {
         mpaRateStorage.findById(film.getMpa().getId())
                 .orElseThrow(() -> new NotFoundException("Film's mpa not found"));
+        List<Director> directors = film.getDirectors();
+        if (directors != null && !directors.isEmpty()) {
+            directors.forEach(director -> directorStorage.findById(director.getId())
+                    .orElseThrow(() ->
+                            new NotFoundException(String.format("Director id=: %d not found", director.getId())))
+            );
+        }
         List<Genre> genres = film.getGenres();
         List<Genre> fromDb;
         if (genres != null && !genres.isEmpty()) {

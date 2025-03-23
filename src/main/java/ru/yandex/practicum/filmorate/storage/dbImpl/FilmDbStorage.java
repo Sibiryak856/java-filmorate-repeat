@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRate;
@@ -29,6 +30,7 @@ public class FilmDbStorage implements FilmStorage {
                 .usingGeneratedKeyColumns("film_id");
         film.setId(insert.executeAndReturnKey(toMap(film)).longValue());
         updateGenres(film.getId(), film.getGenres());
+        updateDirectors(film.getId(), film.getDirectors());
         return film;
     }
 
@@ -47,6 +49,10 @@ public class FilmDbStorage implements FilmStorage {
         if (film.getGenres() != null) {
             clearFilmGenres(film.getId());
             updateGenres(film.getId(), film.getGenres());
+        }
+        if (film.getDirectors() != null) {
+            clearFilmDirectors(film.getId());
+            updateDirectors(film.getId(), film.getDirectors());
         }
     }
 
@@ -160,6 +166,19 @@ public class FilmDbStorage implements FilmStorage {
                         .addValue("filmId", filmId));
     }
 
+    @Override
+    public List<Film> getFilmByDirectorId(long directorId) {
+        return jdbcTemplate.query(
+                "SELECT f.*, mpa.mpa_name " +
+                        "FROM films as f " +
+                        "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                        "JOIN film_directors AS fd ON f.film_id = fd.film_id " +
+                        "WHERE fd.director_id = :directorId",
+                new MapSqlParameterSource()
+                        .addValue("directorId", directorId),
+                this::makeFilm);
+    }
+
 
     private void updateGenres(long filmId, List<Genre> genres) {
         if (genres != null && !genres.isEmpty() ) {
@@ -174,16 +193,40 @@ public class FilmDbStorage implements FilmStorage {
             SqlParameterSource[] params = SqlParameterSourceUtils.createBatch(valueMaps);
 
             jdbcTemplate.batchUpdate(
-                    "MERGE INTO FILM_GENRES (FILM_ID, GENRE_ID) VALUES (:filmId, :genreId)",
+                    "MERGE INTO film_genres (film_id, genre_id) VALUES (:filmId, :genreId)",
+                    params);
+        }
+    }
+
+    private void updateDirectors(long filmId, List<Director> directors) {
+        if (directors != null && !directors.isEmpty() ) {
+            List<Director> newDirectors= new ArrayList<>(directors);
+            Map[] valueMaps = new Map[newDirectors.size()];
+            for (int i = 0; i < newDirectors.size(); i++) {
+                Map<String, Long> map = new HashMap<>();
+                map.put("filmId", filmId);
+                map.put("directorId", directors.get(i).getId());
+                valueMaps[i] = map;
+            }
+            SqlParameterSource[] params = SqlParameterSourceUtils.createBatch(valueMaps);
+
+            jdbcTemplate.batchUpdate(
+                    "MERGE INTO film_directors (film_id, director_id) VALUES (:filmId, :directorId)",
                     params);
         }
     }
 
     private void clearFilmGenres(long id) {
         jdbcTemplate.update(
-                "DELETE FROM FILM_GENRES WHERE FILM_ID = :id",
+                "DELETE FROM film_genres WHERE film_id = :id",
                 new MapSqlParameterSource().addValue("id", id));
     }
+    private void clearFilmDirectors(Long id) {
+        jdbcTemplate.update(
+                "DELETE FROM film_directors WHERE film_id = :id",
+                new MapSqlParameterSource().addValue("id", id));
+    }
+
 
     private Film makeFilm(ResultSet rs, int i) throws SQLException {
         Film film = Film.builder()
