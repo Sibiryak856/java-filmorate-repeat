@@ -14,4 +14,6 @@ public interface DirectorStorage {
     List<Director> findAllByFilmId(long id);
 
     void deleteById(long id);
+
+    List<Long> getDirecorsIdByName(String query);
 }

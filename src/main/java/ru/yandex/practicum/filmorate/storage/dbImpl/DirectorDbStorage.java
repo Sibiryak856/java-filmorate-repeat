@@ -10,10 +10,7 @@ import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -83,6 +80,18 @@ public class DirectorDbStorage implements DirectorStorage {
                         "WHERE director_id = :id",
                 new MapSqlParameterSource()
                         .addValue("id", id)
+        );
+    }
+
+    @Override
+    public List<Long> getDirecorsIdByName(String query) {
+        return jdbcTemplate.query(
+                "SELECT director_id " +
+                        "FROM directors " +
+                        "WHERE LOWER(director_name) LIKE '%:query%'",
+                new MapSqlParameterSource()
+                        .addValue("query", query),
+                (rs, rowNum) -> rs.getLong("director_id")
         );
     }
 

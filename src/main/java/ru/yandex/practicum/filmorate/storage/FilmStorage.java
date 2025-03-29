@@ -27,7 +27,6 @@ public interface FilmStorage {
 
     List<Film> getFilmByTitle(String query);
 
-    List<Film> getFilmByDirectorName(String lowQuery);
+    List<Film> getFilmByDirectorName(String query);
 
-    List<Film> getFilmByDirectorNameAndTitle(String lowQuery);
 }

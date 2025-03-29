@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -74,39 +75,19 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getPopular(int count, long genreId, int year) {
         if (genreId != 0 && year != 0) {
-            return filmStorage.getFilmsByGenreAndYear(genreId, year).stream()
-                    .sorted(new TopFilmsComparator())
-                    .peek(this::setGenreAndDirector)
-                    .limit(count)
-                    .collect(Collectors.toList());
+            return getSortedFilms(filmStorage.getFilmsByGenreAndYear(genreId, year), count);
         } else if (genreId != 0) {
-            return filmStorage.getFilmsByGenre(genreId).stream()
-                    .sorted(new TopFilmsComparator())
-                    .peek(this::setGenreAndDirector)
-                    .limit(count)
-                    .collect(Collectors.toList());
+            return getSortedFilms(filmStorage.getFilmsByGenre(genreId), count);
         } else if (year != 0) {
-            return filmStorage.getFilmsByYear(year).stream()
-                    .sorted(new TopFilmsComparator())
-                    .peek(this::setGenreAndDirector)
-                    .limit(count)
-                    .collect(Collectors.toList());
+            return getSortedFilms(filmStorage.getFilmsByYear(year), count);
         } else {
-            return filmStorage.getAll().stream()
-                    .sorted(new TopFilmsComparator())
-                    .peek(this::setGenreAndDirector)
-                    .limit(count)
-                    .collect(Collectors.toList());
+            return getSortedFilms(filmStorage.getAll(), count);
         }
     }
 
     @Override
     public List<Film> getCommonFilms(long userId, long friendId) {
-        return filmStorage.getCommonFilms(userId, friendId).stream()
-                .sorted(new TopFilmsComparator())
-                .peek(film -> film.setGenres(
-                        genreStorage.findAllByFilmId(film.getId())))
-                .collect(Collectors.toList());
+        return getSortedFilms(filmStorage.getCommonFilms(userId, friendId), null);
     }
 
     @Override
@@ -124,10 +105,7 @@ public class FilmServiceImpl implements FilmService {
                         .peek(this::setGenreAndDirector)
                         .collect(Collectors.toList());
             case "likes":
-                return films.stream()
-                        .sorted(new TopFilmsComparator())
-                        .peek(this::setGenreAndDirector)
-                        .collect(Collectors.toList());
+                return getSortedFilms(films, null);
             default:
                 throw new NotFoundException(String.format("Unsupported sortBy params %s", sortBy));
         }
@@ -135,38 +113,33 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> searchFilms(String query, String by) {
-        List<Film> filmList = filmStorage.getAll();
-        Set<Film> searchedFilms = new HashSet<>();
         String lowQuery = query.toLowerCase();
-        for (Film film : filmList) {
-            setGenreAndDirector(film);
-            if (by.contains("title") && by.contains("director")) {
-                if (film.getName().toLowerCase().contains(lowQuery)) {
-                    searchedFilms.add(film);
-                }
-                List<String> directorsName = film.getDirectors().stream().map(Director::getName).collect(Collectors.toList());
-                directorsName.stream()
-                        .filter(directorName -> directorName.toLowerCase().contains(lowQuery))
-                        .map(directorName -> film)
-                        .peek(this::setGenreAndDirector)
-                        .forEachOrdered(searchedFilms::add);
-            } else if (by.contains("director")) {
-                List<String> directorsName = film.getDirectors().stream().map(Director::getName).collect(Collectors.toList());
-                directorsName.stream()
-                        .filter(directorName -> directorName.toLowerCase().contains(lowQuery))
-                        .map(directorName -> film)
-                        .peek(this::setGenreAndDirector)
-                        .forEachOrdered(searchedFilms::add);
-            } else if (by.contains("title")) {
-                if (film.getName().toLowerCase().contains(lowQuery)) {
-                    searchedFilms.add(film);
-                }
-            } else {
-                throw new NotFoundException("Unsupported request query");
-            }
+        Set<Film> films = new HashSet<>();
+        if (by.contains("title") && by.contains("director")) {
+            films.addAll(filmStorage.getFilmByDirectorName(lowQuery));
+            films.addAll(filmStorage.getFilmByTitle(lowQuery));
+
+            return getSortedFilms(films, null);
+        } else if (by.contains("title")) {
+            return getSortedFilms(filmStorage.getFilmByTitle(lowQuery), null);
+        } else if  (by.contains("director")) {
+            return getSortedFilms(filmStorage.getFilmByDirectorName(lowQuery), null);
+        } else {
+            throw new NotFoundException("Unsupported request query");
         }
-        return searchedFilms.stream()
+    }
+
+    private List<Film> getSortedFilms(Collection<Film> films, @Nullable Integer count) {
+        if (count == null) {
+            return films.stream()
+                    .peek(this :: setGenreAndDirector)
+                    .sorted(new TopFilmsComparator())
+                    .collect(Collectors.toList());
+        }
+        return films.stream()
+                .peek(this :: setGenreAndDirector)
                 .sorted(new TopFilmsComparator())
+                .limit(count)
                 .collect(Collectors.toList());
     }
 
