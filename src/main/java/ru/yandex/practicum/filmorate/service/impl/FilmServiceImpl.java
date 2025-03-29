@@ -129,6 +129,15 @@ public class FilmServiceImpl implements FilmService {
         }
     }
 
+    @Override
+    public List<Film> getRecommendation(long id) {
+        userStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        return filmStorage.getRecommendation(id).stream()
+                .peek(this :: setGenreAndDirector)
+                .collect(Collectors.toList());
+    }
+
     private List<Film> getSortedFilms(Collection<Film> films, @Nullable Integer count) {
         if (count == null) {
             return films.stream()

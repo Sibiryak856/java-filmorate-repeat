@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
@@ -19,6 +21,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService service;
+    private final FilmService filmService;
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
@@ -91,5 +94,13 @@ public class UserController {
         log.info("Request received: DELETE /users/userId = {}", userId);
         service.deleteById(userId);
         log.info("Request DELETE processed");
+    }
+
+    @GetMapping("{id}/recommendations")
+    public List<Film> getRecommendation(@PathVariable Long id) {
+        log.info("Request received: GET /users/id = {}/ recommendations", id);
+        List<Film> films = filmService.getRecommendation(id);
+        log.info(("Request GET processed: {}"), films);
+        return films;
     }
 }

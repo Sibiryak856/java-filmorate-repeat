@@ -29,4 +29,5 @@ public interface FilmStorage {
 
     List<Film> getFilmByDirectorName(String query);
 
+    List<Film> getRecommendation(long id);
 }

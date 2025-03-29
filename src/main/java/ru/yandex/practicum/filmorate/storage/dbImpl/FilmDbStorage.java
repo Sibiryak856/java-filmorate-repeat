@@ -79,7 +79,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT f.*, mpa.mpa_name " +
                 "FROM films as f " +
                 "JOIN mpa ON f.mpa_id = mpa.mpa_id";
-        return jdbcTemplate.query(sql, this :: makeFilm);
+        return jdbcTemplate.query(sql, this::makeFilm);
     }
 
     @Override
@@ -205,8 +205,39 @@ public class FilmDbStorage implements FilmStorage {
                 this::makeFilm);
     }
 
+    @Override
+    public List<Film> getRecommendation(long id) {
+        return jdbcTemplate.query(
+                "SELECT f.*, m.*\n" +
+                        "FROM FILMS f\n" +
+                        "JOIN MPA m ON m.MPA_ID = f.MPA_ID \n" +
+                        "JOIN LIKES l ON l.FILM_ID  = f.FILM_ID \n" +
+                        "WHERE L.USER_ID IN (\n" +
+                        "SELECT L2.USER_ID\n" +
+                        "FROM LIKES AS L2\n" +
+                        "WHERE L2.FILM_ID IN " +
+                        "(" +
+                        "SELECT L3.FILM_ID \n" +
+                        "FROM LIKES L3 \n" +
+                        "WHERE L3.USER_ID = :id)" +
+                        ")\n" +
+                        "AND f.FILM_ID NOT IN " +
+                        "(" +
+                        "SELECT L3.FILM_ID \n" +
+                        "FROM LIKES L3 \n" +
+                        "WHERE L3.USER_ID = :id\n" +
+                        ")\n" +
+                        "GROUP BY f.FILM_ID \n" +
+                        "ORDER BY COUNT(*) DESC\n" +
+                        "LIMIT 10",
+                new MapSqlParameterSource()
+                        .addValue("id", id),
+                this::makeFilm
+        );
+    }
+
     private void updateGenres(long filmId, List<Genre> genres) {
-        if (genres != null && !genres.isEmpty() ) {
+        if (genres != null && !genres.isEmpty()) {
             List<Genre> genresList = new ArrayList<>(genres);
             Map[] valueMaps = new Map[genresList.size()];
             for (int i = 0; i < genresList.size(); i++) {
@@ -224,8 +255,8 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void updateDirectors(long filmId, List<Director> directors) {
-        if (directors != null && !directors.isEmpty() ) {
-            List<Director> newDirectors= new ArrayList<>(directors);
+        if (directors != null && !directors.isEmpty()) {
+            List<Director> newDirectors = new ArrayList<>(directors);
             Map[] valueMaps = new Map[newDirectors.size()];
             for (int i = 0; i < newDirectors.size(); i++) {
                 Map<String, Long> map = new HashMap<>();
@@ -246,6 +277,7 @@ public class FilmDbStorage implements FilmStorage {
                 "DELETE FROM film_genres WHERE film_id = :id",
                 new MapSqlParameterSource().addValue("id", id));
     }
+
     private void clearFilmDirectors(Long id) {
         jdbcTemplate.update(
                 "DELETE FROM film_directors WHERE film_id = :id",
@@ -271,13 +303,13 @@ public class FilmDbStorage implements FilmStorage {
     private void setLikes(Film film) {
         film.setLikes(
                 new HashSet<>(jdbcTemplate.query(
-                "SELECT user_id " +
-                        "FROM likes " +
-                        "WHERE film_id = :id",
-                new MapSqlParameterSource()
-                        .addValue("id", film.getId()),
-                ((rs1, rowNum) ->
-                        rs1.getLong("user_id")))));
+                        "SELECT user_id " +
+                                "FROM likes " +
+                                "WHERE film_id = :id",
+                        new MapSqlParameterSource()
+                                .addValue("id", film.getId()),
+                        ((rs1, rowNum) ->
+                                rs1.getLong("user_id")))));
     }
 
     private Map<String, Object> toMap(Film fIlm) {
