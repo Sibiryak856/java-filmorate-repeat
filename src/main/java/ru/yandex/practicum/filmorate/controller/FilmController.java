@@ -63,6 +63,7 @@ public class FilmController {
         log.info("Request PUT processed");
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable Long id,
                            @PathVariable Long userId) {
