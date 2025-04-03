@@ -6,9 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.ReviewService;
-import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -25,8 +23,6 @@ import static java.lang.Boolean.TRUE;
 public class ReviewController {
 
     private final ReviewService reviewService;
-    private final FilmService filmService;
-    private final UserService userService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
