@@ -25,82 +25,82 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        log.info("Request received: POST /users: {}", user);
+        //log.info("Request received: POST /users: {}", user);
         User created = service.create(user);
-        log.info("Request POST processed: {}", created);
+        //log.info("Request POST processed: {}", created);
         return created;
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        log.info("Request received: PUT /users: {}", user);
+        //log.info("Request received: PUT /users: {}", user);
         User updated = service.update(user);
-        log.info("Request PUT processed");
+        //log.info("Request PUT processed");
         return updated;
     }
 
     @GetMapping("/{id}")
     public User getById(@PathVariable Long id) {
-        log.info("Request received: GET /users/{}", id);
+        //log.info("Request received: GET /users/{}", id);
         User user = service.getById(id);
-        log.info("Request GET processed: {}", user);
+        //log.info("Request GET processed: {}", user);
         return user;
     }
 
     @GetMapping
     public List<User> getAll() {
-        log.info("Request received: GET /users");
+        //log.info("Request received: GET /users");
         List<User> users = service.getAll();
-        log.info("Request GET processed: {}", users);
+        //log.info("Request GET processed: {}", users);
         return users;
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable Long id,
                           @PathVariable Long friendId) {
-        log.info("Request received: PUT /users/{}/friends/{}", id, friendId);
+        //log.info("Request received: PUT /users/{}/friends/{}", id, friendId);
         service.updateFriendship(id, friendId, RequestMethod.PUT);
-        log.info("Request PUT processed");
+        //log.info("Request PUT processed");
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable Long id,
                           @PathVariable Long friendId) {
-        log.info("Request received: DELETE /users/{}/friends/{}", id, friendId);
+        //log.info("Request received: DELETE /users/{}/friends/{}", id, friendId);
         service.updateFriendship(id, friendId, RequestMethod.DELETE);
-        log.info("Request DELETE processed");
+        //log.info("Request DELETE processed");
     }
 
     @GetMapping("/{id}/friends")
     public List<User> getUserFriends(@PathVariable Long id) {
-        log.info("Request received: GET /users/{}/friends", id);
+        //log.info("Request received: GET /users/{}/friends", id);
         List<User> users = service.getUserFriends(id);
-        log.info("Request GET processed: {}", users);
+        //log.info("Request GET processed: {}", users);
         return users;
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable Long id,
                                        @PathVariable Long otherId) {
-        log.info("Request received: GET /users/{}/friends/common/{}", id, otherId);
+        //log.info("Request received: GET /users/{}/friends/common/{}", id, otherId);
         List<User> users = service.getCommonFriends(id, otherId);
-        log.info("Request GET processed: {}", users);
+        //log.info("Request GET processed: {}", users);
         return users;
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{userId}")
     public void deleteById(@PathVariable Long userId) {
-        log.info("Request received: DELETE /users/userId = {}", userId);
+        //log.info("Request received: DELETE /users/userId = {}", userId);
         service.deleteById(userId);
-        log.info("Request DELETE processed");
+        //log.info("Request DELETE processed");
     }
 
     @GetMapping("{id}/recommendations")
     public List<Film> getRecommendation(@PathVariable Long id) {
-        log.info("Request received: GET /users/id = {}/ recommendations", id);
+        //log.info("Request received: GET /users/id = {}/ recommendations", id);
         List<Film> films = filmService.getRecommendation(id);
-        log.info(("Request GET processed: {}"), films);
+        //log.info(("Request GET processed: {}"), films);
         return films;
     }
 }
