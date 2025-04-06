@@ -72,7 +72,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public List<Review> getAllByFilmId(long filmId, int count) {
+    public List<Review> getAllByFilmId(Long filmId, int count) {
         return jdbcTemplate.query(
                 "SELECT r.*, COALESCE(SUM(rl.is_useful), 0) AS useful " +
                         "FROM reviews AS r " +
