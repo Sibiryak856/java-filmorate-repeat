@@ -23,16 +23,17 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public Review create(Review review) {
         checkFieldsIsPresent(review.getUserId(), review.getFilmId());
+        review.setUseful(0L);
         return reviewStorage.create(review);
     }
 
     @Override
     public Review update(Review review) {
-        Review updating  = reviewStorage.findById(review.getId())
+        Review updating  = reviewStorage.findById(review.getReviewId())
                         .orElseThrow(() -> new NotFoundException("Review not found"));
         checkFieldsIsPresent(review.getUserId(), review.getFilmId());
         reviewStorage.update(review);
-        return review;
+        return reviewStorage.findById(review.getReviewId()).get();
     }
 
     @Override
@@ -57,18 +58,22 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new NotFoundException("Review not found"));
         userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-
+        long useful = isPositive ? 1L : -1L;
         switch (method) {
-            case GET:
-                reviewStorage.updateLike(id, userId, isPositive);
+            case PUT:
+                reviewStorage.updateLike(id, userId, useful);
                 break;
             case DELETE:
-                reviewStorage.deleteLike(id, userId, isPositive);
+                reviewStorage.deleteLike(id, userId, useful);
                 break;
             default:
                 throw new NotFoundException("Unsupported request method");
         }
 
+    }
+
+    private void setUseful(Review review) {
+        review.setUseful(reviewStorage.getUseFul(review.getReviewId()));
     }
 
     private void checkFieldsIsPresent(long userId, long filmId) {

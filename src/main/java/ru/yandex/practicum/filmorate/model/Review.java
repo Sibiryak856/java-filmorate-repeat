@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class Review {
 
-    private long id;
+    private Long reviewId;
     @NotBlank
     private String content;
     @NotNull
@@ -19,5 +19,6 @@ public class Review {
     private Long userId;
     @NotNull
     private Long filmId;
+    private Long useful;
 
 }

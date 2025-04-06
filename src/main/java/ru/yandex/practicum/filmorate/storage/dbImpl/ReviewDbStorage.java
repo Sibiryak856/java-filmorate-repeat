@@ -26,16 +26,18 @@ public class ReviewDbStorage implements ReviewStorage {
         SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate())
                 .withTableName("reviews")
                 .usingGeneratedKeyColumns("review_id");
-        review.setId(insert.executeAndReturnKey(toMap(review)).longValue());
+        review.setReviewId(insert.executeAndReturnKey(toMap(review)).longValue());
         return review;
     }
 
     @Override
     public Optional<Review> findById(long id) {
         return jdbcTemplate.query(
-                "SELECT r.* " +
+                "SELECT r.*, COALESCE(SUM(rl.is_useful), 0) AS useful " +
                         "FROM reviews AS r " +
-                        "WHERE review_id = :id",
+                        "LEFT OUTER JOIN reviews_likes AS rl ON r.review_id = rl.review_id " +
+                        "WHERE r.review_id = :id " +
+                        "GROUP BY r.review_id",
                 new MapSqlParameterSource()
                         .addValue("id", id),
                 rs -> {
@@ -49,7 +51,16 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void update(Review review) {
-
+        jdbcTemplate.update(
+                "UPDATE reviews SET " +
+                        "content = :content, " +
+                        "is_positive = :is_positive," +
+                        "user_id = :user_id, " +
+                        "film_id = :film_id " +
+                        "WHERE review_id = :id",
+                new MapSqlParameterSource(toMap(review))
+                        .addValue("id", review.getReviewId())
+        );
     }
 
     @Override
@@ -63,9 +74,12 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public List<Review> getAllByFilmId(long filmId, int count) {
         return jdbcTemplate.query(
-                "SELECT r.* " +
+                "SELECT r.*, COALESCE(SUM(rl.is_useful), 0) AS useful " +
                         "FROM reviews AS r " +
+                        "LEFT OUTER JOIN reviews_likes AS rl ON r.review_id = rl.review_id " +
                         "WHERE (:filmId is null or film_id = :filmId) " +
+                        "GROUP BY r.review_id " +
+                        "ORDER BY useful DESC " +
                         "LIMIT :count",
                 new MapSqlParameterSource()
                         .addValue("filmId", filmId)
@@ -75,28 +89,49 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public void updateLike(long id, long userId, boolean isPositive) {
+    public void updateLike(long id, long userId, long useful) {
         jdbcTemplate.update(
-                "INSERT INTO reviews_likes (review_id, user_id, is_positive) " +
-                        "VALUES (:id, :userId, :isPositive)",
+                "MERGE INTO reviews_likes AS rl " +
+                "USING (VALUES (:id, :userId, :useful)) AS vals (review_id, user_id, is_useful) " +
+                "ON rl.review_id = vals.review_id AND rl.user_id = vals.user_id " +
+                "WHEN MATCHED THEN " +
+                "UPDATE SET is_useful = vals.is_useful " +
+                "WHEN NOT MATCHED THEN " +
+                "INSERT (review_id, user_id, is_useful) " +
+                "VALUES (vals.review_id, vals.user_id, vals.is_useful)",
                 new MapSqlParameterSource()
                         .addValue("id", id)
                         .addValue("userId", userId)
-                        .addValue("is_positive", isPositive)
+                        .addValue("useful", useful)
         );
     }
 
     @Override
-    public void deleteLike(long id, long userId, boolean isPositive) {
+    public void deleteLike(long id, long userId, long useful) {
         jdbcTemplate.update(
                 "DELETE FROM reviews_likes " +
                         "WHERE review_id = :id " +
                         "AND user_id = :userId " +
-                        "AND isPositive = :isPositive",
+                        "AND is_useful = :useful",
                 new MapSqlParameterSource()
                         .addValue("id", id)
                         .addValue("userId", userId)
-                        .addValue("is_positive", isPositive)
+                        .addValue("useful", useful)
+        );
+    }
+
+    @Override
+    public Long getUseFul(long reviewId) {
+        return jdbcTemplate.query(
+                "SELECT COALESCE(SUM(is_useful), 0) " +
+                        "FROM reviews_likes " +
+                        "WHERE review_id = :reviewId " +
+                        "GROUP BY review_id",
+                new MapSqlParameterSource()
+                        .addValue("reviewId", reviewId),
+                rs -> {
+                    return rs.getLong(1);
+                }
         );
     }
 
@@ -111,11 +146,12 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private Review makeReview(ResultSet rs, int i) throws SQLException {
         return Review.builder()
-                .id(rs.getLong("review_id"))
+                .reviewId(rs.getLong("review_id"))
                 .content(rs.getString("content"))
                 .isPositive(rs.getBoolean("is_positive"))
                 .userId(rs.getLong("user_id"))
                 .filmId(rs.getLong("film_id"))
+                .useful(rs.getLong("useful"))
                 .build();
     }
 }

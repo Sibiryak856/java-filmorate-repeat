@@ -17,7 +17,9 @@ public interface ReviewStorage {
 
     List<Review> getAllByFilmId(long filmId, int count);
 
-    void updateLike(long id, long userId, boolean isPositive);
+    void updateLike(long id, long userId, long useful);
 
-    void deleteLike(long id, long userId, boolean isPositive);
+    void deleteLike(long id, long userId, long useful);
+
+    Long getUseFul(long reviewId);
 }

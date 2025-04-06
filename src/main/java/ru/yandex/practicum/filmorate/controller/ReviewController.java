@@ -82,7 +82,6 @@ public class ReviewController {
         log.info("Request PUT processed");
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable Long id,
                         @PathVariable Long userId) {
@@ -91,7 +90,6 @@ public class ReviewController {
         log.info("Request DELETE processed");
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}/dislike/{userId}")
     public void deleteDislike(@PathVariable Long id,
                            @PathVariable Long userId) {
